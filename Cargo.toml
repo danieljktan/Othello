@@ -1,0 +1,6 @@
+[package]
+name = "Othello"
+version = "0.1.0"
+authors = ["Daniel Tan <danieljktan@yahoo.com>"]
+
+[dependencies]
