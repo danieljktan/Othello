@@ -1,5 +1,5 @@
 [package]
-name = "Othello"
+name = "othello"
 version = "0.1.0"
 authors = ["Daniel Tan <danieljktan@yahoo.com>"]
 
