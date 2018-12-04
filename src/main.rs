@@ -49,6 +49,22 @@ fn debruins(mut board : u64)->u64 {
     return TABLE[(((fold * 0x783a9b23) >> 26) & 0x3f) as usize];
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    //unit test for debruins multiplication.
+    #[test]
+    fn test_debruins() {
+        for i in 0..64 {
+            let x : u64 = 1<<i;
+            assert_eq!(i, debruins(x));
+        }
+    }
+}
+
+
+
 
 
 
