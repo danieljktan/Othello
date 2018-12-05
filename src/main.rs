@@ -5,7 +5,8 @@ fn main() {
 }
 
 
-const START_POSITION : Othello = Othello{ white: E5|D4, black:E4|D5};
+const START_POSITION : Othello = Othello{white: E5|D4, black:E4|D5};
+
 
 const A1 : u64 = 0x1;
 const B1 : u64 = 0x2;
@@ -132,6 +133,7 @@ fn debruins(mut board : u64)->u64 {
     return TABLE[(((fold * 0x783a9b23) >> 26) & 0x3f) as usize];
 }
 
+
 #[cfg(test)]
 mod test_bits {
     use super::*;
@@ -170,6 +172,7 @@ mod test_bits {
         assert_eq!(FILE_F, 0x2020202020202020);
         assert_eq!(FILE_G, 0x4040404040404040);
         assert_eq!(FILE_H, 0x8080808080808080);
+        assert_eq!(RANK_1|RANK_2|RANK_3|RANK_4|RANK_5|RANK_6|RANK_7|RANK_8, 0xffffffffffffffff);
     }
 
 }
