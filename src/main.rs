@@ -91,6 +91,20 @@ const RANK_6 : u64 = A6|B6|C6|D6|E6|F6|G6|H6;
 const RANK_7 : u64 = A7|B7|C7|D7|E7|F7|G7|H7;
 const RANK_8 : u64 = A8|B8|C8|D8|E8|F8|G8|H8;
 
+const A1_H8 : u64 = A1|B2|C3|D4|E5|F6|G7|H8;
+const A2_G8 : u64 = A2|B3|C4|D5|E6|F7|G8;
+const B1_H7 : u64 = B1|C2|D3|E4|F5|G6|H7;
+const C1_H6 : u64 = C1|D2|E3|F4|G5|H6;
+const A3_F8 : u64 = A3|B4|C5|D6|E7|F8;
+const A4_E8 : u64 = A4|B5|C6|D7|E8;
+const D1_H5 : u64 = D1|E2|F3|G4|H5;
+const A5_D8 : u64 = A5|B6|C7|D8;
+const E1_H4 : u64 = E1|F2|G3|H4;
+const A6_C8 : u64 = A6|B7|C8;
+const F1_H3 : u64 = F1|G2|H3;
+const A7_B8 : u64 = A7|B8;
+const G1_H2 : u64 = G1|H2;
+
 
 struct Othello {
     white : u64,
@@ -173,6 +187,7 @@ mod test_bits {
         assert_eq!(FILE_G, 0x4040404040404040);
         assert_eq!(FILE_H, 0x8080808080808080);
         assert_eq!(RANK_1|RANK_2|RANK_3|RANK_4|RANK_5|RANK_6|RANK_7|RANK_8, 0xffffffffffffffff);
+        assert_eq!(FILE_A|FILE_B|FILE_C|FILE_D|FILE_E|FILE_F|FILE_G|FILE_H, 0xffffffffffffffff);
     }
 
 }
