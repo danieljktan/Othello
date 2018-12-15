@@ -1,16 +1,13 @@
 use std::fmt;
 
 fn main() {
-    let o : Othello = Othello {
-        white: A1_H8|G1_H2|A7_B8, 
-        black: A8_H1|G8_H7
-    };
-    println!("{}", o);
+    let y = available_moves(START_POSITION, true);
+    let x : u64 = C5|D6|F4|E3;
+    println!("Available:\n\n{}\n\nActual:\n\n{}\n\n", Othello{white:y,black:0x0}, Othello{white:x,black:0x0});
 }
 
 
 const START_POSITION : Othello = Othello{white: E5|D4, black:E4|D5};
-
 
 const A1 : u64 = 0x1;
 const B1 : u64 = 0x2;
@@ -123,7 +120,8 @@ const F8_H6 : u64 = F8|G7|H6;
 const A2_B1 : u64 = A2|B1;
 const G8_H7 : u64 = G8|H7;
 
-const FLIP_MASK : [u64; 24] = 
+//the bit mask for the tiles flipped by the board
+const FLIP_MASK : [u64; 64] = 
 [
     FILE_A|RANK_1|A1_H8,        FILE_B|RANK_1|B1_H7|A2_B1,  FILE_C|RANK_1|A3_C1|C1_H6,  FILE_D|RANK_1|A4_D1|D1_H5,
     FILE_E|RANK_1|A5_E1|E1_H4,  FILE_F|RANK_1|F1_H3|A6_F1,  FILE_G|RANK_1|G1_H2|A7_G1,  FILE_H|RANK_1|A8_H1,
@@ -132,13 +130,23 @@ const FLIP_MASK : [u64; 24] =
     FILE_E|RANK_2|A6_F1|F1_H3,  FILE_F|RANK_2|A7_G1|E1_H4,  FILE_G|RANK_2|A8_H1|F1_H3,  FILE_H|RANK_2|G1_H2|B8_H2,
     
     FILE_A|RANK_3|A3_C1|A3_F8,  FILE_B|RANK_3|A2_G8|A4_D1,  FILE_C|RANK_3|A5_E1|A1_H8,  FILE_D|RANK_3|A6_F1|B1_H7,
-    FILE_E|RANK_3|A7_G1|C1_H6,  FILE_F|RANK_3|A8_H1|D1_H5,  FILE_G|RANK_3|B8_H2|E1_H4,  FILE_H|RANK_3|F1_H3|C8_H3
+    FILE_E|RANK_3|A7_G1|C1_H6,  FILE_F|RANK_3|A8_H1|D1_H5,  FILE_G|RANK_3|B8_H2|E1_H4,  FILE_H|RANK_3|F1_H3|C8_H3,
 
-    //FILE_A|RANK_4|
+    FILE_A|RANK_4|A4_D1|A4_E8,  FILE_B|RANK_4|A5_E1|A3_F8,  FILE_C|RANK_4|A2_G8|A6_F1,  FILE_D|RANK_4|A7_G1|A1_H8,
+    FILE_E|RANK_4|A8_H1|B1_H7,  FILE_F|RANK_4|B8_H2|C1_H6,  FILE_G|RANK_4|C8_H3|D1_H5,  FILE_H|RANK_4|E1_H4|D8_H4,
+
+    FILE_A|RANK_5|A5_D8|A5_E1,  FILE_B|RANK_5|A6_F1|A4_E8,  FILE_C|RANK_5|A7_G1|A3_F8,  FILE_D|RANK_5|A2_G8|A8_H1,
+    FILE_E|RANK_5|A1_H8|B8_H2,  FILE_F|RANK_5|C8_H3|B1_H7,  FILE_G|RANK_5|C1_H6|D8_H4,  FILE_H|RANK_5|D1_H5|E8_H5,
+
+    FILE_A|RANK_6|A6_C8|A6_F1,  FILE_B|RANK_6|A7_G1|A5_D8,  FILE_C|RANK_6|A4_E8|A8_H1,  FILE_D|RANK_6|B8_H2|A3_F8,
+    FILE_E|RANK_6|C8_H3|A2_G8,  FILE_F|RANK_6|A1_H8|D8_H4,  FILE_G|RANK_6|E8_H5|B1_H7,  FILE_H|RANK_6|F8_H6|C1_H6,
+
+    FILE_A|RANK_7|A7_B8|A7_G1,  FILE_B|RANK_7|A8_H1|A6_C8,  FILE_C|RANK_7|A5_D8|B8_H2,  FILE_D|RANK_7|C8_H3|A4_E8,
+    FILE_E|RANK_7|A3_F8|D8_H4,  FILE_F|RANK_7|A2_G8|E8_H5,  FILE_G|RANK_7|F8_H6|A1_H8,  FILE_H|RANK_7|G8_H7|B1_H7,
+
+    FILE_A|RANK_8|A8_H1,        FILE_B|RANK_8|A7_B8|B8_H2,  FILE_C|RANK_8|A6_C8|C8_H3,  FILE_D|RANK_8|A5_D8|D8_H4,
+    FILE_E|RANK_8|A4_E8|E8_H5,  FILE_F|RANK_8|A3_F8|F8_H6,  FILE_G|RANK_8|A2_G8|G8_H7,  FILE_H|RANK_8|A1_H8
 ];
-
-
-
 
 
 struct Othello {
@@ -169,8 +177,8 @@ impl fmt::Display for Othello {
 }
 
 
-fn debruins(mut board : u64)->u64 {
-    const TABLE : [u64; 64] = [63, 30,  3, 32, 25, 41, 22, 33,
+fn debruins(mut board : u64)->usize {
+    const TABLE : [usize; 64] = [63, 30,  3, 32, 25, 41, 22, 33,
                                15, 50, 42, 13, 11, 53, 19, 34,
                                61, 29,  2, 51, 21, 43, 45, 10,
                                18, 47,  1, 54,  9, 57,  0, 35,
@@ -183,6 +191,38 @@ fn debruins(mut board : u64)->u64 {
     return TABLE[(((fold * 0x783a9b23) >> 26) & 0x3f) as usize];
 }
 
+
+fn neighborhood(board : u64)->u64 {
+    let neighbor : u64 = board | ((board << 1) & !FILE_A) | ((board >> 1) & !FILE_H);
+    return (neighbor << 8) | (neighbor >> 8) | neighbor;
+}
+
+
+fn available_moves(o : Othello, turn : bool)->u64 {
+    let mut moves : u64 = 0x0;
+    let empty = !(o.white|o.black);
+    //TODO: this needs to be fixed!!!
+    if turn {
+        let mut temp = neighborhood(o.black) & empty;
+        while temp != 0 {
+            let x : usize = debruins(temp);
+            if (FLIP_MASK[x] & o.white) != 0 {
+                moves |= 1 << x;
+            }
+            temp &= temp-1;
+        }
+    } else {
+        let mut temp = neighborhood(o.white) & empty;
+        while temp != 0 {
+            let x : usize = debruins(temp);
+            if (FLIP_MASK[x] & o.black) != 0 {
+                moves |= 1 << x;
+            }
+            temp &= temp-1;
+        }
+    }
+    return moves;
+}
 
 #[cfg(test)]
 mod test_bits {
@@ -226,6 +266,12 @@ mod test_bits {
         assert_eq!(FILE_A|FILE_B|FILE_C|FILE_D|FILE_E|FILE_F|FILE_G|FILE_H, 0xffffffffffffffff);
     }
 
+    #[test]
+    fn test_available_moves() {
+        let y = available_moves(START_POSITION, true);
+        let x : u64 = C5|D6|F4|E3;
+        println!("Available:\n\n{}\n\nActual:\n\n{}\n\n", y, x);
+    }
 }
 
 
