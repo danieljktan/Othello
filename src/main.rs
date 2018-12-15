@@ -1,7 +1,11 @@
 use std::fmt;
 
 fn main() {
-    println!("{}", START_POSITION);
+    let o : Othello = Othello {
+        white: A1_H8|G1_H2|A7_B8, 
+        black: A8_H1|G8_H7
+    };
+    println!("{}", o);
 }
 
 
@@ -105,6 +109,37 @@ const F1_H3 : u64 = F1|G2|H3;
 const A7_B8 : u64 = A7|B8;
 const G1_H2 : u64 = G1|H2;
 
+const A8_H1 : u64 = A8|B7|C6|D5|E4|F3|G2|H1;
+const A7_G1 : u64 = A7|B6|C5|D4|E3|F2|G1;
+const B8_H2 : u64 = B8|C7|D6|E5|F4|G3|H2;
+const C8_H3 : u64 = C8|D7|E6|F5|G4|H3;
+const A6_F1 : u64 = A6|B5|C4|D3|E2|F1;
+const A5_E1 : u64 = A5|B4|C3|D2|E1;
+const D8_H4 : u64 = D8|E7|F6|G5|H4;
+const A4_D1 : u64 = A4|B3|C2|D1;
+const E8_H5 : u64 = E8|F7|G6|H5;
+const A3_C1 : u64 = A3|B2|C1;
+const F8_H6 : u64 = F8|G7|H6;
+const A2_B1 : u64 = A2|B1;
+const G8_H7 : u64 = G8|H7;
+
+const FLIP_MASK : [u64; 24] = 
+[
+    FILE_A|RANK_1|A1_H8,        FILE_B|RANK_1|B1_H7|A2_B1,  FILE_C|RANK_1|A3_C1|C1_H6,  FILE_D|RANK_1|A4_D1|D1_H5,
+    FILE_E|RANK_1|A5_E1|E1_H4,  FILE_F|RANK_1|F1_H3|A6_F1,  FILE_G|RANK_1|G1_H2|A7_G1,  FILE_H|RANK_1|A8_H1,
+    
+    FILE_A|RANK_2|A2_G8|A2_B1,  FILE_B|RANK_2|A1_H8|A3_C1,  FILE_C|RANK_2|A4_D1|B1_H7,  FILE_D|RANK_2|C1_H6|A5_E1,
+    FILE_E|RANK_2|A6_F1|F1_H3,  FILE_F|RANK_2|A7_G1|E1_H4,  FILE_G|RANK_2|A8_H1|F1_H3,  FILE_H|RANK_2|G1_H2|B8_H2,
+    
+    FILE_A|RANK_3|A3_C1|A3_F8,  FILE_B|RANK_3|A2_G8|A4_D1,  FILE_C|RANK_3|A5_E1|A1_H8,  FILE_D|RANK_3|A6_F1|B1_H7,
+    FILE_E|RANK_3|A7_G1|C1_H6,  FILE_F|RANK_3|A8_H1|D1_H5,  FILE_G|RANK_3|B8_H2|E1_H4,  FILE_H|RANK_3|F1_H3|C8_H3
+
+    //FILE_A|RANK_4|
+];
+
+
+
+
 
 struct Othello {
     white : u64,
@@ -114,6 +149,7 @@ struct Othello {
 
 impl fmt::Display for Othello {
     fn fmt(&self, f: &mut fmt::Formatter)->fmt::Result {
+        assert_eq!(self.white & self.black, 0);
         let mut s = String::with_capacity(71);
         for i in 0..64 {
             if (i % 8)==0 && i != 0 {
