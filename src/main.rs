@@ -1,9 +1,7 @@
 use std::fmt;
 
 fn main() {
-    let y = available_moves(START_POSITION, true);
-    let x : u64 = C5|D6|F4|E3;
-    println!("Available:\n\n{}\n\nActual:\n\n{}\n\n", Othello{white:y,black:0x0}, Othello{white:x,black:0x0});
+
 }
 
 
@@ -120,34 +118,18 @@ const F8_H6 : u64 = F8|G7|H6;
 const A2_B1 : u64 = A2|B1;
 const G8_H7 : u64 = G8|H7;
 
-//the bit mask for the tiles flipped by the board
-const FLIP_MASK : [u64; 64] = 
-[
-    FILE_A|RANK_1|A1_H8,        FILE_B|RANK_1|B1_H7|A2_B1,  FILE_C|RANK_1|A3_C1|C1_H6,  FILE_D|RANK_1|A4_D1|D1_H5,
-    FILE_E|RANK_1|A5_E1|E1_H4,  FILE_F|RANK_1|F1_H3|A6_F1,  FILE_G|RANK_1|G1_H2|A7_G1,  FILE_H|RANK_1|A8_H1,
-    
-    FILE_A|RANK_2|A2_G8|A2_B1,  FILE_B|RANK_2|A1_H8|A3_C1,  FILE_C|RANK_2|A4_D1|B1_H7,  FILE_D|RANK_2|C1_H6|A5_E1,
-    FILE_E|RANK_2|A6_F1|F1_H3,  FILE_F|RANK_2|A7_G1|E1_H4,  FILE_G|RANK_2|A8_H1|F1_H3,  FILE_H|RANK_2|G1_H2|B8_H2,
-    
-    FILE_A|RANK_3|A3_C1|A3_F8,  FILE_B|RANK_3|A2_G8|A4_D1,  FILE_C|RANK_3|A5_E1|A1_H8,  FILE_D|RANK_3|A6_F1|B1_H7,
-    FILE_E|RANK_3|A7_G1|C1_H6,  FILE_F|RANK_3|A8_H1|D1_H5,  FILE_G|RANK_3|B8_H2|E1_H4,  FILE_H|RANK_3|F1_H3|C8_H3,
-
-    FILE_A|RANK_4|A4_D1|A4_E8,  FILE_B|RANK_4|A5_E1|A3_F8,  FILE_C|RANK_4|A2_G8|A6_F1,  FILE_D|RANK_4|A7_G1|A1_H8,
-    FILE_E|RANK_4|A8_H1|B1_H7,  FILE_F|RANK_4|B8_H2|C1_H6,  FILE_G|RANK_4|C8_H3|D1_H5,  FILE_H|RANK_4|E1_H4|D8_H4,
-
-    FILE_A|RANK_5|A5_D8|A5_E1,  FILE_B|RANK_5|A6_F1|A4_E8,  FILE_C|RANK_5|A7_G1|A3_F8,  FILE_D|RANK_5|A2_G8|A8_H1,
-    FILE_E|RANK_5|A1_H8|B8_H2,  FILE_F|RANK_5|C8_H3|B1_H7,  FILE_G|RANK_5|C1_H6|D8_H4,  FILE_H|RANK_5|D1_H5|E8_H5,
-
-    FILE_A|RANK_6|A6_C8|A6_F1,  FILE_B|RANK_6|A7_G1|A5_D8,  FILE_C|RANK_6|A4_E8|A8_H1,  FILE_D|RANK_6|B8_H2|A3_F8,
-    FILE_E|RANK_6|C8_H3|A2_G8,  FILE_F|RANK_6|A1_H8|D8_H4,  FILE_G|RANK_6|E8_H5|B1_H7,  FILE_H|RANK_6|F8_H6|C1_H6,
-
-    FILE_A|RANK_7|A7_B8|A7_G1,  FILE_B|RANK_7|A8_H1|A6_C8,  FILE_C|RANK_7|A5_D8|B8_H2,  FILE_D|RANK_7|C8_H3|A4_E8,
-    FILE_E|RANK_7|A3_F8|D8_H4,  FILE_F|RANK_7|A2_G8|E8_H5,  FILE_G|RANK_7|F8_H6|A1_H8,  FILE_H|RANK_7|G8_H7|B1_H7,
-
-    FILE_A|RANK_8|A8_H1,        FILE_B|RANK_8|A7_B8|B8_H2,  FILE_C|RANK_8|A6_C8|C8_H3,  FILE_D|RANK_8|A5_D8|D8_H4,
-    FILE_E|RANK_8|A4_E8|E8_H5,  FILE_F|RANK_8|A3_F8|F8_H6,  FILE_G|RANK_8|A2_G8|G8_H7,  FILE_H|RANK_8|A1_H8
-];
-
+const FILE : [u64; 8] = [FILE_A, FILE_B, FILE_C, FILE_D, 
+                         FILE_E, FILE_F, FILE_G, FILE_H];
+const RANK : [u64; 8] = [RANK_1, RANK_2, RANK_3, RANK_4, 
+                         RANK_5, RANK_6, RANK_7, RANK_8];
+const DIAG : [u64; 16] = [A1_H8, A2_G8, A3_F8, A4_E8, 
+                          A5_D8, A6_C8, A7_B8,    H1,
+                            0x0,    A8, G1_H2, F1_H3, 
+                          E1_H4, D1_H5, C1_H6, B1_H7];
+const ADIA : [u64; 16] = [A8_H1, A7_G1, A6_F1, A5_E1, 
+                          A4_D1, A3_C1, A2_B1,    A1, 
+                            0x0,    H8, G8_H7, F8_H6, 
+                          E8_H5, D8_H4, C8_H3, B8_H2];
 
 struct Othello {
     white : u64,
@@ -208,23 +190,38 @@ fn reverse_bits(mut n : u64)->u64 {
 }
 
 
-fn sliding_mask(o : u64, m : u64, s : u64)->u64 {
+//hyperbola quintenssence
+fn hq(o : u64, m : u64, s : u64)->u64 {
     let x : u64 = o & m;
-    return ((x.wrapping_sub(s << 1)) ^ (reverse_bits(reverse_bits(x).wrapping_sub(reverse_bits(s) << 1)))) & m;
+    return ((x.wrapping_sub(s << 1)) ^ reverse_bits(reverse_bits(x).wrapping_sub(reverse_bits(s) << 1))) & m;
 }
 
 
+fn sliding_mask(x : usize, o : u64, bit : u64)->u64 {
+    assert_eq!(1 << x, bit);
+    let rank : usize = x >> 3;
+    let file : usize = x & 0x7;
+    let horizontal    : u64 = hq(o, FILE[file], bit);
+    let vertical      : u64 = hq(o, RANK[rank], bit);
+    let diagonal      : u64 = hq(o, DIAG[rank.wrapping_sub(file) & 0xf], bit);
+    let anti_diagonal : u64 = hq(o, ADIA[(rank+file) ^ 0x7], bit);
+    return horizontal ^ vertical ^ diagonal ^ anti_diagonal;
+}
+
+
+
 fn available_moves(o : Othello, turn : bool)->u64 {
+    //TODO: this may not be correct...
     let mut moves : u64 = 0x0;
     let empty = !(o.white|o.black);
     if turn {
         let mut temp = neighborhood(o.black) & empty;
         while temp != 0 {
             let x : usize = debruins(temp);
-            let y : u64 = sliding_mask(o.white, FLIP_MASK[x], 1<<x);
-            println!("Available:\n{}\n", Othello{white:y, black:0x0});
-            if (FLIP_MASK[x] & o.white) != 0 {
-                moves |= 1 << x;
+            let bit : u64 = 1 << x;
+            let y : u64 = sliding_mask(x, o.white|empty, bit);
+            if (y & o.black) != 0 && (y & o.white & !neighborhood(bit)) != 0 {
+                moves |= bit;
             }
             temp &= temp-1;
         }
@@ -232,8 +229,10 @@ fn available_moves(o : Othello, turn : bool)->u64 {
         let mut temp = neighborhood(o.white) & empty;
         while temp != 0 {
             let x : usize = debruins(temp);
-            if (FLIP_MASK[x] & o.black) != 0 {
-                moves |= 1 << x;
+            let bit : u64 = 1 << x;
+            let y : u64 = sliding_mask(x, o.black|empty, bit);
+            if (y & o.white) != 0 && (y & o.black & !neighborhood(bit)) != 0 {
+                moves |= bit;
             }
             temp &= temp-1;
         }
@@ -285,9 +284,11 @@ mod test_bits {
 
     #[test]
     fn test_available_moves() {
-        let y = available_moves(START_POSITION, true);
-        let x : u64 = C5|D6|F4|E3;
-        println!("Available:\n\n{}\n\nActual:\n\n{}\n\n", y, x);
+        assert_eq!(available_moves(START_POSITION, true), C5|D6|F4|E3);
+        assert_eq!(available_moves(START_POSITION, false), C4|D3|F5|E6);
+        assert_eq!(available_moves(Othello{white:B2, black:C1}, false), A3);
+
+
     }
 }
 
