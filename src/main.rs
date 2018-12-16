@@ -179,13 +179,13 @@ impl fmt::Display for Othello {
 
 fn debruins(mut board : u64)->usize {
     const TABLE : [usize; 64] = [63, 30,  3, 32, 25, 41, 22, 33,
-                               15, 50, 42, 13, 11, 53, 19, 34,
-                               61, 29,  2, 51, 21, 43, 45, 10,
-                               18, 47,  1, 54,  9, 57,  0, 35,
-                               62, 31, 40,  4, 49,  5, 52, 26,
-                               60,  6, 23, 44, 46, 27, 56, 16,
-                                7, 39, 48, 24, 59, 14, 12, 55,
-                               38, 28, 58, 20, 37, 17, 36, 8];
+                                 15, 50, 42, 13, 11, 53, 19, 34,
+                                 61, 29,  2, 51, 21, 43, 45, 10,
+                                 18, 47,  1, 54,  9, 57,  0, 35,
+                                 62, 31, 40,  4, 49,  5, 52, 26,
+                                 60,  6, 23, 44, 46, 27, 56, 16,
+                                  7, 39, 48, 24, 59, 14, 12, 55,
+                                 38, 28, 58, 20, 37, 17, 36,  8];
     board ^= board-1;
     let fold : u64 = (board & 0xffffffff) ^ (board >> 32);
     return TABLE[(((fold * 0x783a9b23) >> 26) & 0x3f) as usize];
@@ -198,14 +198,31 @@ fn neighborhood(board : u64)->u64 {
 }
 
 
+fn reverse_bits(mut n : u64)->u64 {
+    let mut ret : u64 = 0;
+    while n != 0 {
+        ret |= 1 << (63 - debruins(n));
+        n &= n-1;
+    }
+    return ret;
+}
+
+
+fn sliding_mask(o : u64, m : u64, s : u64)->u64 {
+    let x : u64 = o & m;
+    return ((x.wrapping_sub(s << 1)) ^ (reverse_bits(reverse_bits(x).wrapping_sub(reverse_bits(s) << 1)))) & m;
+}
+
+
 fn available_moves(o : Othello, turn : bool)->u64 {
     let mut moves : u64 = 0x0;
     let empty = !(o.white|o.black);
-    //TODO: this needs to be fixed!!!
     if turn {
         let mut temp = neighborhood(o.black) & empty;
         while temp != 0 {
             let x : usize = debruins(temp);
+            let y : u64 = sliding_mask(o.white, FLIP_MASK[x], 1<<x);
+            println!("Available:\n{}\n", Othello{white:y, black:0x0});
             if (FLIP_MASK[x] & o.white) != 0 {
                 moves |= 1 << x;
             }
