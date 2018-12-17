@@ -263,7 +263,16 @@ fn evaluate(o : &Othello, at_end : bool)->i64 {
 }
 
 
-fn make_move(o : &Othello, tile : u64, turn : Turn)-> Othello {
+//fn hq(o : u64, m : u64, s : u64)->u64 {
+//    let x : u64 = o & m;
+//    return ((x.wrapping_sub(s << 1)) ^ reverse_bits(reverse_bits(x).wrapping_sub(reverse_bits(s) << 1))) & m;
+//}
+//    let horizontal    : u64 = hq(o, FILE[file], bit);
+//    let vertical      : u64 = hq(o, RANK[rank], bit);
+//    let diagonal      : u64 = hq(o, DIAG[rank.wrapping_sub(file) & 0xf], bit);
+//    let anti_diagonal : u64 = hq(o, ADIA[(rank+file) ^ 0x7], bit);
+//    return horizontal ^ vertical ^ diagonal ^ anti_diagonal;
+fn make_move(o : &Othello, tile : u64, index : usize, turn : Turn)-> Othello {
     assert_eq!(tile & (tile-1), 0x0); //only 1 bit of data
     assert_eq!((o.white|o.black) & tile, 0x0); //othello board must be valid
     assert_eq!(o.white & o.black, 0x0);
@@ -287,6 +296,7 @@ fn make_move(o : &Othello, tile : u64, turn : Turn)-> Othello {
     }
 }
 
+
 fn minimax(o : Othello, depth : i64, mut alpha : i64, mut beta : i64, turn : Turn)->(u64, i64) {
     assert_eq!(o.white & o.black, 0x0);
     assert!(depth >= 0);
@@ -303,8 +313,9 @@ fn minimax(o : Othello, depth : i64, mut alpha : i64, mut beta : i64, turn : Tur
         let mut best_mov : u64 = 0x0;
         let mut best_value : i64 = i64::min_value();
         while b != 0 {
-            let tile : u64 = 1 << debruins(b);
-            let (mov, val) = minimax(make_move(&o, tile, Turn::BLACK), depth-1, alpha, beta, Turn::WHITE);
+            let i : usize = debruins(b);
+            let tile : u64 = 1 << i;
+            let (mov, val) = minimax(make_move(&o, tile, i, Turn::BLACK), depth-1, alpha, beta, Turn::WHITE);
             if val > best_value {
                 best_value = val;
                 best_mov = tile;
@@ -327,8 +338,9 @@ fn minimax(o : Othello, depth : i64, mut alpha : i64, mut beta : i64, turn : Tur
         let mut best_mov : u64 = 0x0;
         let mut best_value : i64 = i64::max_value();
         while w != 0 {
-            let tile : u64 = 1 << debruins(w);
-            let (mov, val) = minimax(make_move(&o, tile, Turn::WHITE), depth-1, alpha, beta, Turn::BLACK);
+            let i : usize = debruins(w);
+            let tile : u64 = 1 << i;
+            let (mov, val) = minimax(make_move(&o, tile, i, Turn::WHITE), depth-1, alpha, beta, Turn::BLACK);
             if val < best_value {
                 best_value = val;
                 best_mov = tile;
