@@ -4,6 +4,10 @@ fn main() {
 
 }
 
+enum Turn {
+    WHITE,
+    BLACK,
+}
 
 const START_POSITION : Othello = Othello{white: E5|D4, black:E4|D5};
 
@@ -118,18 +122,12 @@ const F8_H6 : u64 = F8|G7|H6;
 const A2_B1 : u64 = A2|B1;
 const G8_H7 : u64 = G8|H7;
 
-const FILE : [u64; 8] = [FILE_A, FILE_B, FILE_C, FILE_D, 
-                         FILE_E, FILE_F, FILE_G, FILE_H];
-const RANK : [u64; 8] = [RANK_1, RANK_2, RANK_3, RANK_4, 
-                         RANK_5, RANK_6, RANK_7, RANK_8];
-const DIAG : [u64; 16] = [A1_H8, A2_G8, A3_F8, A4_E8, 
-                          A5_D8, A6_C8, A7_B8,    H1,
-                            0x0,    A8, G1_H2, F1_H3, 
-                          E1_H4, D1_H5, C1_H6, B1_H7];
-const ADIA : [u64; 16] = [A8_H1, A7_G1, A6_F1, A5_E1, 
-                          A4_D1, A3_C1, A2_B1,    A1, 
-                            0x0,    H8, G8_H7, F8_H6, 
-                          E8_H5, D8_H4, C8_H3, B8_H2];
+const FILE : [u64; 8]  = [FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H];
+const RANK : [u64; 8]  = [RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8];
+const DIAG : [u64; 16] = [A1_H8, A2_G8, A3_F8, A4_E8, A5_D8, A6_C8, A7_B8,    H1,
+                            0x0,    A8, G1_H2, F1_H3, E1_H4, D1_H5, C1_H6, B1_H7];
+const ADIA : [u64; 16] = [A8_H1, A7_G1, A6_F1, A5_E1, A4_D1, A3_C1, A2_B1,    A1, 
+                            0x0,    H8, G8_H7, F8_H6, E8_H5, D8_H4, C8_H3, B8_H2];
 
 struct Othello {
     white : u64,
@@ -170,7 +168,7 @@ fn debruins(mut board : u64)->usize {
                                  38, 28, 58, 20, 37, 17, 36,  8];
     board ^= board-1;
     let fold : u64 = (board & 0xffffffff) ^ (board >> 32);
-    return TABLE[(((fold * 0x783a9b23) >> 26) & 0x3f) as usize];
+    return TABLE[((fold * 0x783a9b23 >> 26) & 0x3f) as usize];
 }
 
 
@@ -209,12 +207,16 @@ fn sliding_mask(x : usize, o : u64, bit : u64)->u64 {
 }
 
 
+fn available_moves(o : &Othello, turn : Turn)->u64 {
+    //TODO: this whole bit manipulation hack may not be correct...
+    //TODO: optimize?
+    assert_eq!(o.white & o.black, 0x0);
 
-fn available_moves(o : Othello, turn : bool)->u64 {
-    //TODO: this may not be correct...
     let mut moves : u64 = 0x0;
     let empty = !(o.white|o.black);
-    if turn {
+    match turn {
+
+    Turn::WHITE=> {
         let mut temp = neighborhood(o.black) & empty;
         while temp != 0 {
             let x : usize = debruins(temp);
@@ -225,7 +227,8 @@ fn available_moves(o : Othello, turn : bool)->u64 {
             }
             temp &= temp-1;
         }
-    } else {
+    },
+    Turn::BLACK=> {
         let mut temp = neighborhood(o.white) & empty;
         while temp != 0 {
             let x : usize = debruins(temp);
@@ -237,8 +240,87 @@ fn available_moves(o : Othello, turn : bool)->u64 {
             temp &= temp-1;
         }
     }
+    }
+
     return moves;
 }
+
+
+fn evaluate(o : &Othello, at_end : bool)->i64 {
+    let w : i64 = o.white.count_ones() as i64;
+    let b : i64 = o.black.count_ones() as i64;
+    if at_end {
+        if w == b {
+            return 0;
+        } else if w > b {
+            return i64::min_value();
+        } else {
+            return i64::max_value();
+        }
+    } else {
+        return b - w;
+    }
+}
+
+
+fn minimax(o : &Othello, depth : i64, mut alpha : i64, mut beta : i64, turn : Turn)->(u64, i64) {
+    let mut w = available_moves(&o, Turn::WHITE);
+    let mut b = available_moves(&o, Turn::BLACK);
+    if depth == 0 || (w == 0 && b == 0){
+       return (0x0, evaluate(&o, w == 0 && b == 0));
+    }
+
+    match turn {
+            
+    Turn::BLACK=> {
+        let mut best_mov : u64 = 0x0;
+        let mut best_value : i64 = i64::min_value();
+        while b != 0 {
+            let (mov, val) = minimax(&o, depth-1, alpha, beta, Turn::WHITE);
+            if val > best_value {
+                best_value = val;
+                best_mov = 1 << debruins(b);                
+            }
+
+            if best_value >= alpha {
+                alpha = best_value;
+            }
+
+            if alpha >= beta {
+                break;
+            }
+
+            b &= b-1;
+        }
+        return (best_mov, best_value);
+    },
+
+    Turn::WHITE=> {
+        let mut best_mov : u64 = 0x0;
+        let mut best_value : i64 = i64::max_value();
+        while w != 0 {
+            let (mov, val) = minimax(&o, depth-1, alpha, beta, Turn::BLACK);
+            if val < best_value {
+                best_value = val;
+                best_mov = 1 << debruins(w);
+            }
+
+            if best_value <= alpha {
+                alpha = best_value;
+            }
+
+            if alpha <= beta {
+                break;
+            }
+
+            w &= w-1;
+        }
+        return (best_mov, best_value);
+    }
+
+    }
+}
+
 
 #[cfg(test)]
 mod test_bits {
@@ -284,11 +366,18 @@ mod test_bits {
 
     #[test]
     fn test_available_moves() {
-        assert_eq!(available_moves(START_POSITION, true), C5|D6|F4|E3);
-        assert_eq!(available_moves(START_POSITION, false), C4|D3|F5|E6);
-        assert_eq!(available_moves(Othello{white:B2, black:C1}, false), A3);
+        assert_eq!(available_moves(&START_POSITION, Turn::WHITE), C5|D6|F4|E3);
+        assert_eq!(available_moves(&START_POSITION, Turn::BLACK), C4|D3|F5|E6);
 
-
+        const p1 : Othello = Othello{white:B2, black:C1};
+        const p2 : Othello = Othello{white:D8, black:E7|F6|G5};
+        const p3 : Othello = Othello{white:B2|C3|D4|E5|F6|G7, black:A1};
+        const p4 : Othello = Othello{white:D4, black:C4|D5|D6|D3|D2|E4|F4};
+        assert_eq!(available_moves(&p1, Turn::BLACK), A3);
+        assert_eq!(available_moves(&p2, Turn::WHITE), H4);
+        assert_eq!(available_moves(&p3, Turn::BLACK), H8);
+        assert_eq!(available_moves(&p4, Turn::WHITE), B4|G4|D1|D7);
+        assert_eq!(available_moves(&p4, Turn::BLACK), 0x0);
     }
 }
 
