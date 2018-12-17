@@ -263,7 +263,34 @@ fn evaluate(o : &Othello, at_end : bool)->i64 {
 }
 
 
-fn minimax(o : &Othello, depth : i64, mut alpha : i64, mut beta : i64, turn : Turn)->(u64, i64) {
+fn make_move(o : &Othello, tile : u64, turn : Turn)-> Othello {
+    assert_eq!(tile & (tile-1), 0x0); //only 1 bit of data
+    assert_eq!((o.white|o.black) & tile, 0x0); //othello board must be valid
+    assert_eq!(o.white & o.black, 0x0);
+
+    match turn {
+
+    Turn::BLACK=> {
+        let mut black : u64 = o.black | tile;
+        let mut white : u64 = o.white;
+
+        return Othello{white:white, black:black};
+    },
+
+    Turn::WHITE=> {
+        let mut white : u64 = o.white | tile;
+        let mut black : u64 = o.black;
+
+        return Othello{white:white, black:black};
+    }
+
+    }
+}
+
+fn minimax(o : Othello, depth : i64, mut alpha : i64, mut beta : i64, turn : Turn)->(u64, i64) {
+    assert_eq!(o.white & o.black, 0x0);
+    assert!(depth >= 0);
+
     let mut w = available_moves(&o, Turn::WHITE);
     let mut b = available_moves(&o, Turn::BLACK);
     if depth == 0 || (w == 0 && b == 0){
@@ -276,10 +303,11 @@ fn minimax(o : &Othello, depth : i64, mut alpha : i64, mut beta : i64, turn : Tu
         let mut best_mov : u64 = 0x0;
         let mut best_value : i64 = i64::min_value();
         while b != 0 {
-            let (mov, val) = minimax(&o, depth-1, alpha, beta, Turn::WHITE);
+            let tile : u64 = 1 << debruins(b);
+            let (mov, val) = minimax(make_move(&o, tile, Turn::BLACK), depth-1, alpha, beta, Turn::WHITE);
             if val > best_value {
                 best_value = val;
-                best_mov = 1 << debruins(b);                
+                best_mov = tile;
             }
 
             if best_value >= alpha {
@@ -299,10 +327,11 @@ fn minimax(o : &Othello, depth : i64, mut alpha : i64, mut beta : i64, turn : Tu
         let mut best_mov : u64 = 0x0;
         let mut best_value : i64 = i64::max_value();
         while w != 0 {
-            let (mov, val) = minimax(&o, depth-1, alpha, beta, Turn::BLACK);
+            let tile : u64 = 1 << debruins(w);
+            let (mov, val) = minimax(make_move(&o, tile, Turn::WHITE), depth-1, alpha, beta, Turn::BLACK);
             if val < best_value {
                 best_value = val;
-                best_mov = 1 << debruins(w);
+                best_mov = tile;
             }
 
             if best_value <= alpha {
@@ -366,18 +395,18 @@ mod test_bits {
 
     #[test]
     fn test_available_moves() {
+        const POS1 : Othello = Othello{white:B2, black:C1};
+        const POS2 : Othello = Othello{white:D8, black:E7|F6|G5};
+        const POS3 : Othello = Othello{white:B2|C3|D4|E5|F6|G7, black:A1};
+        const POS4 : Othello = Othello{white:D4, black:C4|D5|D6|D3|D2|E4|F4};
+        
         assert_eq!(available_moves(&START_POSITION, Turn::WHITE), C5|D6|F4|E3);
         assert_eq!(available_moves(&START_POSITION, Turn::BLACK), C4|D3|F5|E6);
-
-        const p1 : Othello = Othello{white:B2, black:C1};
-        const p2 : Othello = Othello{white:D8, black:E7|F6|G5};
-        const p3 : Othello = Othello{white:B2|C3|D4|E5|F6|G7, black:A1};
-        const p4 : Othello = Othello{white:D4, black:C4|D5|D6|D3|D2|E4|F4};
-        assert_eq!(available_moves(&p1, Turn::BLACK), A3);
-        assert_eq!(available_moves(&p2, Turn::WHITE), H4);
-        assert_eq!(available_moves(&p3, Turn::BLACK), H8);
-        assert_eq!(available_moves(&p4, Turn::WHITE), B4|G4|D1|D7);
-        assert_eq!(available_moves(&p4, Turn::BLACK), 0x0);
+        assert_eq!(available_moves(&POS1, Turn::BLACK), A3);
+        assert_eq!(available_moves(&POS2, Turn::WHITE), H4);
+        assert_eq!(available_moves(&POS3, Turn::BLACK), H8);
+        assert_eq!(available_moves(&POS4, Turn::WHITE), B4|G4|D1|D7);
+        assert_eq!(available_moves(&POS4, Turn::BLACK), 0x0);
     }
 }
 
